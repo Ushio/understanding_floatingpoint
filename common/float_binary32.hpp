@@ -1,5 +1,7 @@
 ﻿#pragma once
 
+#include <algorithm>
+
 #define FT_ASSERT(expected) if((expected) == 0) { __debugbreak(); }
 
 const uint32_t MAX_FRACTION = 0x7FFFFF;
@@ -27,6 +29,16 @@ inline uint32_t get_significand(float f) {
 	return as_uint32(f) & 0x7FFFFF;
 }
 
+inline float set_significand(float f, uint32_t significand) {
+	FT_ASSERT(significand < 0x800000);
+	return as_float((as_uint32(f) & 0xFF800000) | significand);
+}
+
 inline bool get_signbit(float f) {
 	return (as_uint32(f) & 0x80000000) != 0;
+}
+
+inline float ulp_normalized(float f) {
+	int32_t e = get_exponent(f);
+	return binary32_encode(PLUS_SIGN_BIT, std::max(e - 23, 0), 0);
 }

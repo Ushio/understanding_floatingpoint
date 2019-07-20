@@ -16,7 +16,7 @@ inline float binary32_encode(bool sign_bit, uint8_t expornent, uint32_t signific
 	return as_float((sign_bit ? 0x80000000 : 0) | (static_cast<uint32_t>(expornent) << 23) | significand);
 }
 
-inline uint8_t expornent(float f) {
+inline uint8_t exponent(float f) {
 	uint32_t e = as_uint32(f) & 0x7F800000;
 	return e >> 23;
 }

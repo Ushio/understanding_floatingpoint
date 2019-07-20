@@ -1,0 +1,7 @@
+build
+*_bin/*.dll
+*_bin/*.exe
+*_bin/*.exp
+*_bin/*.ilk
+*_bin/*.lib
+*_bin/*.pdb

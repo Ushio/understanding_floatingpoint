@@ -44,7 +44,7 @@ void ofApp::draw(){
 	rt::Xoshiro128StarStar random;
 	for (int i = 0; i < 10000; ++i) {
 		float f = random.uniform(-10.0f, 10.0f);
-		int32_t exp = (int32_t)exponent(f) - 127;
+		int32_t exp = (int32_t)get_exponent(f) - 127;
 		glm::vec3 p = glm::vec3(f, exp, 0.0f);
 		
 		ofDrawSphere(p, 0.01f);

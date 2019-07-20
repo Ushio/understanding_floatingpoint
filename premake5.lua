@@ -65,6 +65,10 @@ project "unit_test"
     includedirs { "common/" }
     files { "common/**.hpp", "common/**.cpp" }
 
+    -- glm
+    includedirs { "libs/glm/" }
+    defines {"GLM_FORCE_CTOR_INIT"}
+
     symbols "On"
     buildoptions { "/utf-8" }
 

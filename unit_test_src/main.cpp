@@ -2,6 +2,7 @@
 #include "catch.hpp"
 
 #include <iostream>
+#include <limits>
 #include "peseudo_random.hpp"
 #include "float_binary32.hpp"
 
@@ -17,7 +18,7 @@ int main() {
 		"--use-colour",
 		"auto",
 
-		"machine_epsilon"
+		"special_cases"
 		//"ulp_just_normalized",
 	};
 	session.run(sizeof(custom_argv) / sizeof(custom_argv[0]), custom_argv);
@@ -102,4 +103,10 @@ TEST_CASE("ulp") {
 
 TEST_CASE("machine_epsilon") {
 	REQUIRE(ulp(1.0) == std::numeric_limits<float>::epsilon());
+}
+
+TEST_CASE("special_cases") {
+	REQUIRE(encode(PLUS_SIGN_BIT, 255, 0)  ==  std::numeric_limits<float>::infinity());
+	REQUIRE(encode(MINUS_SIGN_BIT, 255, 0) == -std::numeric_limits<float>::infinity());
+	REQUIRE(isnan(encode(MINUS_SIGN_BIT, 255, 1)));
 }

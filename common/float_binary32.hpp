@@ -56,4 +56,50 @@ namespace binary32 {
 		return encode(PLUS_SIGN_BIT, 0, 1 << std::max(e - 1, 0));
 	}
 
+	inline float next_float_up(float f) {
+		if (std::isnan(f)) {
+			return f;
+		}
+		if (f == encode(PLUS_SIGN_BIT, 255, 0)) {
+			return f;
+		}
+
+		uint32_t u = as_uint32(f);
+
+		// f is -0.0
+		if (u == as_uint32(encode(MINUS_SIGN_BIT, 0, 0))) {
+			return encode(PLUS_SIGN_BIT, 0, 1);
+		}
+
+		if (get_signbit(f) == false /* positive value */) {
+			u++;
+		}
+		else {
+			u--;
+		}
+		return as_float(u);
+	}
+	inline float next_float_down(float f) {
+		if (std::isnan(f)) {
+			return f;
+		}
+		if (f == encode(MINUS_SIGN_BIT, 255, 0)) {
+			return f;
+		}
+
+		uint32_t u = as_uint32(f);
+
+		// f is +0.0
+		if (u == as_uint32(encode(PLUS_SIGN_BIT, 0, 0))) {
+			return encode(MINUS_SIGN_BIT, 0, 1);
+		}
+		
+		if (get_signbit(f) == false /* positive value */) {
+			u--;
+		}
+		else {
+			u++;
+		}
+		return as_float(u);
+	}
 }

@@ -64,14 +64,14 @@ namespace binary32 {
 			return f;
 		}
 
-		uint32_t u = as_uint32(f);
-
-		// f is -0.0
-		if (u == as_uint32(encode(MINUS_SIGN_BIT, 0, 0))) {
-			return encode(PLUS_SIGN_BIT, 0, 1);
+		// if f is zero (-0.0f, 0.0f), set f to positive
+		if (f == 0.f) {
+			f = 0.0f;
 		}
 
-		if (get_signbit(f) == false /* positive value */) {
+		uint32_t u = as_uint32(f);
+
+		if ((u & 0x80000000) == 0 /* positive */) {
 			u++;
 		}
 		else {
@@ -87,14 +87,14 @@ namespace binary32 {
 			return f;
 		}
 
-		uint32_t u = as_uint32(f);
-
-		// f is +0.0
-		if (u == as_uint32(encode(PLUS_SIGN_BIT, 0, 0))) {
-			return encode(MINUS_SIGN_BIT, 0, 1);
+		// if f is zero (-0.0f, 0.0f), set f to negative
+		if (f == 0.f) {
+			f = -0.0f;
 		}
+
+		uint32_t u = as_uint32(f);
 		
-		if (get_signbit(f) == false /* positive value */) {
+		if ((u & 0x80000000) == 0 /* positive */) {
 			u--;
 		}
 		else {

@@ -18,7 +18,8 @@ int main() {
 		"--use-colour",
 		"auto",
 
-		//"next_float_up_down"
+		//"any"
+		"next_float_up_down"
 	};
 	session.run(sizeof(custom_argv) / sizeof(custom_argv[0]), custom_argv);
 }
@@ -159,4 +160,8 @@ TEST_CASE("next_float_up_down") {
 		REQUIRE(next_float_up(f)   == std::nextafter(f,  std::numeric_limits<float>::max()));
 		REQUIRE(next_float_down(f) == std::nextafter(f, -std::numeric_limits<float>::max()));
 	}
+}
+
+TEST_CASE("any") {
+
 }

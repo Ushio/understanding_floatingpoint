@@ -17,6 +17,7 @@ int main() {
 		"--use-colour",
 		"auto",
 
+		"machine_epsilon"
 		//"ulp_just_normalized",
 	};
 	session.run(sizeof(custom_argv) / sizeof(custom_argv[0]), custom_argv);
@@ -99,3 +100,6 @@ TEST_CASE("ulp") {
 	}
 }
 
+TEST_CASE("machine_epsilon") {
+	REQUIRE(ulp(1.0) == std::numeric_limits<float>::epsilon());
+}

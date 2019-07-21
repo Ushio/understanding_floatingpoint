@@ -3,6 +3,8 @@
 #include "float_binary32.hpp"
 #include "peseudo_random.hpp"
 
+using namespace binary32;
+
 // FLOATING POINT VISUALLY EXPLAINED
 // http://fabiensanglard.net/floating_point_visually_explained/
 

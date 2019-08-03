@@ -3,6 +3,7 @@
 
 #include <iostream>
 #include <limits>
+#include <cfenv>
 #include "peseudo_random.hpp"
 #include "float_binary32.hpp"
 
@@ -19,7 +20,7 @@ int main() {
 		"auto",
 
 		//"any"
-		"next_float_up_down"
+		"any"
 	};
 	session.run(sizeof(custom_argv) / sizeof(custom_argv[0]), custom_argv);
 }
@@ -102,7 +103,8 @@ TEST_CASE("ulp") {
 }
 
 TEST_CASE("machine_epsilon") {
-	REQUIRE(ulp(1.0) == std::numeric_limits<float>::epsilon());
+	REQUIRE(ulp(1.0f) == std::numeric_limits<float>::epsilon());
+	REQUIRE(std::ldexp(1.0f, -23) == std::numeric_limits<float>::epsilon());
 }
 
 TEST_CASE("special_cases") {
@@ -162,6 +164,38 @@ TEST_CASE("next_float_up_down") {
 	}
 }
 
-TEST_CASE("any") {
+TEST_CASE("integers") {
+	int x = -16777216; /* 2^24 */
+	for (float i = x; i <= 16777215.0f /* 2^24 */; i += 1.0f) {
+		REQUIRE(i == x);
+		++x;
+	}
+	REQUIRE(x == 16777216);
+}
+TEST_CASE("fesetround") {
+	std::fesetround(FE_UPWARD);
+	float x = 16777216.0f;
+	REQUIRE(x + 1.0f == 16777218.0f);
+}
+TEST_CASE("memset") {
+	float x;
+	memset(&x, 0, sizeof(float));
+	REQUIRE(x == encode(PLUS_SIGN_BIT, 0, 0));
+	REQUIRE(as_uint32(x) == as_uint32(encode(PLUS_SIGN_BIT, 0, 0)));
+}
+TEST_CASE("int_as_float") {
+	int a = as_uint32(-0.2f);
+	int b = as_uint32(-0.1f);
+	int c = as_uint32(+0.1f);
+	int d = as_uint32(+0.2f);
+	REQUIRE(a > b);
+	REQUIRE(b < c);
+	REQUIRE(c < d);
+}
 
+TEST_CASE("FLT_MIN") {
+	REQUIRE(FLT_MIN == encode(PLUS_SIGN_BIT, 1, 0));
+}
+TEST_CASE("any") {
+	REQUIRE(FLT_MIN == encode(PLUS_SIGN_BIT, 1, 0));
 }

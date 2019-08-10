@@ -56,50 +56,29 @@ namespace binary32 {
 		return encode(PLUS_SIGN_BIT, 0, 1 << std::max(e - 1, 0));
 	}
 
-	inline float next_float_up(float f) {
-		if (std::isnan(f)) {
-			return f;
-		}
-		if (f == encode(PLUS_SIGN_BIT, 255, 0)) {
-			return f;
-		}
+	inline int32_t to_ordered(float f) {
+		uint32_t b = as_uint32(f);
 
-		// if f is zero (-0.0f, 0.0f), set f to positive
-		if (f == 0.f) {
-			f = 0.0f;
-		}
+		uint32_t s = b & 0x80000000; // sign bit
+		int32_t  x = b & 0x7FFFFFFF; // expornent and significand
 
-		uint32_t u = as_uint32(f);
-
-		if ((u & 0x80000000) == 0 /* positive */) {
-			u++;
-		}
-		else {
-			u--;
-		}
-		return as_float(u);
+		return s ? -x : x;
 	}
-	inline float next_float_down(float f) {
-		if (std::isnan(f)) {
-			return f;
-		}
-		if (f == encode(MINUS_SIGN_BIT, 255, 0)) {
-			return f;
-		}
 
-		// if f is zero (-0.0f, 0.0f), set f to negative
-		if (f == 0.f) {
-			f = -0.0f;
+	inline float from_ordered(int32_t ordered) {
+		if (ordered < 0) {
+			uint32_t x = -ordered;
+			return as_float(x | 0x80000000);
 		}
+		return as_float(ordered);
+	}
+	inline float next_float(float x, int move) {
+		return from_ordered(to_ordered(x) + move);
+	}
 
-		uint32_t u = as_uint32(f);
-		
-		if ((u & 0x80000000) == 0 /* positive */) {
-			u--;
-		}
-		else {
-			u++;
-		}
-		return as_float(u);
+	template <class T>
+	float flulp_error(float x, T r) {
+		T e = (T(x) - r) / T(ulp(float(r)));
+		return std::fabs(float(e));
 	}
 }

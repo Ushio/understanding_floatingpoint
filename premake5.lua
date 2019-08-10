@@ -69,6 +69,9 @@ project "unit_test"
     includedirs { "libs/glm/" }
     defines {"GLM_FORCE_CTOR_INIT"}
 
+    -- boost
+    includedirs { "C:/local/boost_1_70_0" }
+    
     symbols "On"
     buildoptions { "/utf-8" }
 

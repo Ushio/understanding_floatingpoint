@@ -7,6 +7,10 @@
 #include "peseudo_random.hpp"
 #include "float_binary32.hpp"
 
+#define ENABLE_BOOST 1
+
+#include <boost/multiprecision/mpfr.hpp>
+
 using namespace binary32;
 
 int main() {
@@ -19,8 +23,8 @@ int main() {
 		"--use-colour",
 		"auto",
 
-		//"any"
-		"any"
+		// "ordered"
+		// "any"
 	};
 	session.run(sizeof(custom_argv) / sizeof(custom_argv[0]), custom_argv);
 }
@@ -125,45 +129,6 @@ TEST_CASE("special_cases") {
 	REQUIRE(isnan(encode(MINUS_SIGN_BIT, 255, 1)));
 }
 
-TEST_CASE("next_float_up_down") {
-	float cases[] = {
-		encode(MINUS_SIGN_BIT, 0, 1),
-		encode(MINUS_SIGN_BIT, 0, 0),
-		encode(PLUS_SIGN_BIT, 0, 0),
-		encode(PLUS_SIGN_BIT, 0, 1),
-	};
-
-	for (auto f : cases) {
-		REQUIRE(next_float_up(f)   == std::nextafter(f,  std::numeric_limits<float>::max()));
-		REQUIRE(next_float_down(f) == std::nextafter(f, -std::numeric_limits<float>::max()));
-	}
-
-	rt::Xoshiro128StarStar random;
-	for (int i = 0; i <= 10000000; ++i) {
-		bool sign_bit = random.uniform() < 0.5f;
-
-		// [0, MAX_FRACTION)
-		uint32_t significand = random.uniform_integer() % (MAX_FRACTION + 1);
-
-		// [0, 255)
-		uint8_t exponent = random.uniform_integer() % 255;
-
-		// next is +inf
-		if (exponent == 254 && significand == MAX_FRACTION) {
-			continue;
-		}
-
-		float f = encode(
-			sign_bit,
-			exponent,
-			significand
-		);
-
-		REQUIRE(next_float_up(f)   == std::nextafter(f,  std::numeric_limits<float>::max()));
-		REQUIRE(next_float_down(f) == std::nextafter(f, -std::numeric_limits<float>::max()));
-	}
-}
-
 TEST_CASE("integers") {
 	int x = -16777216; /* 2^24 */
 	for (float i = x; i <= 16777215.0f /* 2^24 */; i += 1.0f) {
@@ -172,11 +137,7 @@ TEST_CASE("integers") {
 	}
 	REQUIRE(x == 16777216);
 }
-TEST_CASE("fesetround") {
-	std::fesetround(FE_UPWARD);
-	float x = 16777216.0f;
-	REQUIRE(x + 1.0f == 16777218.0f);
-}
+
 TEST_CASE("memset") {
 	float x;
 	memset(&x, 0, sizeof(float));
@@ -196,6 +157,69 @@ TEST_CASE("int_as_float") {
 TEST_CASE("FLT_MIN") {
 	REQUIRE(FLT_MIN == encode(PLUS_SIGN_BIT, 1, 0));
 }
+TEST_CASE("ordered") {
+	REQUIRE(0.0f == from_ordered(0));
+	REQUIRE(0 == to_ordered(+0.0f));
+	REQUIRE(0 == to_ordered(-0.0f));
+
+	REQUIRE(-1 == to_ordered(std::nextafter(0.0f, -1.0f)));
+	REQUIRE(+1 == to_ordered(std::nextafter(0.0f, +1.0f)));
+
+	{
+		float across_zero = encode(MINUS_SIGN_BIT, 0, 10);
+		for (int i = 0; i < 20; ++i) {
+			float a = next_float(across_zero, +1);
+			float b = std::nextafter(across_zero, +std::numeric_limits<float>::max());
+			REQUIRE(a == b);
+
+			across_zero = a;
+		}
+	}
+	{
+		float across_zero = encode(PLUS_SIGN_BIT, 0, 10);
+		for (int i = 0; i < 20; ++i) {
+			float a = next_float(across_zero, -1);
+			float b = std::nextafter(across_zero, -std::numeric_limits<float>::max());
+			REQUIRE(a == b);
+
+			across_zero = a;
+		}
+	}
+
+
+	rt::Xoshiro128StarStar random;
+	for (int i = 0; i <= 10000000; ++i) {
+		bool sign_bit = random.uniform() < 0.5f;
+
+		// [0, MAX_FRACTION)
+		uint32_t significand = random.uniform_integer() % (MAX_FRACTION + 1);
+
+		// [0, 255)
+		uint8_t exponent = random.uniform_integer() % 255;
+
+		// abs larger next is +inf
+		if (exponent == 254 && significand == MAX_FRACTION) {
+			continue;
+		}
+
+		float f = encode(
+			sign_bit,
+			exponent,
+			significand
+		);
+
+		REQUIRE(next_float(f, +1) == std::nextafter(f, +std::numeric_limits<float>::max()));
+		REQUIRE(next_float(f, -1) == std::nextafter(f, -std::numeric_limits<float>::max()));
+	}
+}
 TEST_CASE("any") {
-	REQUIRE(FLT_MIN == encode(PLUS_SIGN_BIT, 1, 0));
+	//int beg = to_ordered(encode(MINUS_SIGN_BIT, 254, MAX_FRACTION));
+	//int end = to_ordered(encode(PLUS_SIGN_BIT,  254, MAX_FRACTION));
+	//for (int o = beg; o < end; ++o) {
+	//	REQUIRE(o == to_ordered(from_ordered(o)));
+	//}
+	//namespace bm = boost::multiprecision;
+	//// float e = flulp_error<bm::mpfr_float_1000>(std::exp(10.0), bm::exp(bm::mpfr_float_1000(10.0)));
+	//float e = flulp_error<bm::mpfr_float_1000>(1.0f, next_float_up(1.0f));
+	//printf("%f\n", e);
 }

@@ -24,7 +24,7 @@ int main() {
 		"auto",
 
 		// "ordered"
-		"special_cases"
+		"max_value"
 	};
 	session.run(sizeof(custom_argv) / sizeof(custom_argv[0]), custom_argv);
 }
@@ -247,7 +247,45 @@ TEST_CASE("ordered") {
 }
 
 TEST_CASE("max_value") {
+	using namespace rt;
+	auto &env = OpenCLProgramEnvioronment::instance();
+	env.setSourceDirectory("../kernels");
 
+	rt::Xoshiro128StarStar random;
+
+	OpenCLContext context;
+
+	int deviceCount = context.deviceCount();
+	for (int device_index = 0; device_index < deviceCount; ++device_index) {
+		// INFO("device name : " << context.device_info(device_index).name);
+
+		auto lane = context.lane(device_index);
+
+		OpenCLProgram program("find_max.cl", lane.context, lane.device_id);
+		OpenCLKernel kernel("find_max", program.program());
+
+		for (int j = 0; j < 100; ++j) {
+			std::vector<float> values;
+			for (int i = 0; i < 1000; ++i) {
+				values.push_back(random.uniform(0.0f, 1000.0f));
+			}
+			float min_value_truth = 0.0f;
+			for (auto f : values) {
+				min_value_truth = std::max(min_value_truth, f);
+			}
+			OpenCLBuffer<float> values_gpu(lane.context, values.data(), values.size(), rt::OpenCLKernelBufferMode::ReadWrite);
+
+			float min_value = 0.0f;
+			OpenCLBuffer<uint32_t> min_value_gpu(lane.context, (uint32_t *)(&min_value), 1, rt::OpenCLKernelBufferMode::ReadWrite);
+
+			kernel.setArguments(values_gpu.memory(), min_value_gpu.memory());
+			kernel.launch(lane.queue, 0, values.size());
+
+			min_value_gpu.read_immediately((uint32_t *)(&min_value), lane.queue);
+
+			REQUIRE(min_value == min_value_truth);
+		}
+	}
 }
 TEST_CASE("any") {
 

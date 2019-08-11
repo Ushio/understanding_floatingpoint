@@ -40,12 +40,12 @@ namespace binary32 {
 	}
 
 	inline bool can_ulp_store_normal_number(float f) {
-		return 23 < get_exponent(f);
+		return 24 <= get_exponent(f);
 	}
 
 	inline float ulp_only_normal_number(float f) {
 		int32_t e = get_exponent(f);
-		return encode(PLUS_SIGN_BIT, std::max(e - 23, 0), 0);
+		return encode(PLUS_SIGN_BIT, std::max(e - 23, 1), 0);
 	}
 
 	inline float ulp(float f) {

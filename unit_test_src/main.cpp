@@ -24,7 +24,7 @@ int main() {
 		"auto",
 
 		// "ordered"
-		// "any"
+		"ulp_just_normalized"
 	};
 	session.run(sizeof(custom_argv) / sizeof(custom_argv[0]), custom_argv);
 }
@@ -128,6 +128,10 @@ TEST_CASE("special_cases") {
 	REQUIRE(encode(MINUS_SIGN_BIT, 255, 0) == -std::numeric_limits<float>::infinity());
 	REQUIRE(isnan(encode(MINUS_SIGN_BIT, 255, 1)));
 }
+TEST_CASE("plus_zero, minus_zero") {
+	REQUIRE(-1.0f == std::copysign(1.0f, -0.0f));
+	REQUIRE(+1.0f == std::copysign(1.0f, +0.0f));
+}
 
 TEST_CASE("integers") {
 	int x = -16777216; /* 2^24 */
@@ -222,4 +226,22 @@ TEST_CASE("any") {
 	//// float e = flulp_error<bm::mpfr_float_1000>(std::exp(10.0), bm::exp(bm::mpfr_float_1000(10.0)));
 	//float e = flulp_error<bm::mpfr_float_1000>(1.0f, next_float_up(1.0f));
 	//printf("%f\n", e);
+
+	//namespace bm = boost::multiprecision;
+
+	//int N = 1000;
+	//for (int i = 0; i < N; ++i) {
+	//	float x = glm::mix(0.0f, 2.0f, float(i) / N);
+	//	float e = flulp_error<bm::mpfr_float_1000>(std::log(next_float(x, 1)), bm::log(bm::mpfr_float_1000(x)));
+	//	printf("%.10f,%.10f\n", x, e);
+	//}
+
+	//for (int E = 124; E <= 174; ++E) {
+	//	float x = std::ldexp(1.0f, E - 127 - 23);
+	//	printf("'%.30f\n", x);
+	//}
+
+	float x;
+	memset(&x, 0, sizeof(x));
+	printf("%f\n", x);
 }

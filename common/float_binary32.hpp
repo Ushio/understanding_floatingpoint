@@ -50,7 +50,7 @@ namespace binary32 {
 
 	inline float ulp(float f) {
 		int32_t e = get_exponent(f);
-		if (23 < e) {
+		if (24 <= e) {
 			return encode(PLUS_SIGN_BIT, e - 23, 0);
 		}
 		return encode(PLUS_SIGN_BIT, 0, 1 << std::max(e - 1, 0));

@@ -71,6 +71,11 @@ project "unit_test"
 
     -- boost
     includedirs { "C:/local/boost_1_70_0" }
+
+    -- OpenCL
+    includedirs { "$(OCL_ROOT)/include" }
+    libdirs { "$(OCL_ROOT)/lib/x86_64" }
+    links { "OpenCL" }
     
     symbols "On"
     buildoptions { "/utf-8" }

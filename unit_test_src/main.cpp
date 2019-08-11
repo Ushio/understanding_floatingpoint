@@ -6,9 +6,9 @@
 #include <cfenv>
 #include "peseudo_random.hpp"
 #include "float_binary32.hpp"
+#include "raccoon_ocl.hpp"
 
 #define ENABLE_BOOST 1
-
 #include <boost/multiprecision/mpfr.hpp>
 
 using namespace binary32;
@@ -24,7 +24,7 @@ int main() {
 		"auto",
 
 		// "ordered"
-		"ulp_just_normalized"
+		"special_cases"
 	};
 	session.run(sizeof(custom_argv) / sizeof(custom_argv[0]), custom_argv);
 }
@@ -104,6 +104,29 @@ TEST_CASE("ulp") {
 		float u = ulp(f);
 		REQUIRE(f + u == std::nextafter(f, std::numeric_limits<float>::max()));
 	}
+
+	// denom ulp
+	for (int i = 0; i <= 1000000; ++i) {
+		// [0, MAX_FRACTION)
+		uint32_t significand = random.uniform_integer() % (MAX_FRACTION + 1);
+
+		// [0, 24)
+		uint8_t exponent = random.uniform_integer() % 24;
+
+		// next is +inf
+		if (exponent == 254 && significand == MAX_FRACTION) {
+			continue;
+		}
+
+		float f = encode(
+			PLUS_SIGN_BIT,
+			exponent,
+			significand
+		);
+
+		float u = ulp(f);
+		REQUIRE(f + u == std::nextafter(f, std::numeric_limits<float>::max()));
+	}
 }
 
 TEST_CASE("machine_epsilon") {
@@ -126,7 +149,13 @@ TEST_CASE("special_cases") {
 
 	REQUIRE(encode(PLUS_SIGN_BIT, 255, 0)  ==  std::numeric_limits<float>::infinity());
 	REQUIRE(encode(MINUS_SIGN_BIT, 255, 0) == -std::numeric_limits<float>::infinity());
-	REQUIRE(isnan(encode(MINUS_SIGN_BIT, 255, 1)));
+
+	for (int i = 1; i <= MAX_FRACTION; ++i) {
+		REQUIRE(isnan(encode(MINUS_SIGN_BIT, 255, i)));
+	}
+	for (int i = 1; i <= MAX_FRACTION; ++i) {
+		REQUIRE(isnan(encode(MINUS_SIGN_BIT, 255, i)));
+	}
 }
 TEST_CASE("plus_zero, minus_zero") {
 	REQUIRE(-1.0f == std::copysign(1.0f, -0.0f));
@@ -216,32 +245,10 @@ TEST_CASE("ordered") {
 		REQUIRE(next_float(f, -1) == std::nextafter(f, -std::numeric_limits<float>::max()));
 	}
 }
+
+TEST_CASE("max_value") {
+
+}
 TEST_CASE("any") {
-	//int beg = to_ordered(encode(MINUS_SIGN_BIT, 254, MAX_FRACTION));
-	//int end = to_ordered(encode(PLUS_SIGN_BIT,  254, MAX_FRACTION));
-	//for (int o = beg; o < end; ++o) {
-	//	REQUIRE(o == to_ordered(from_ordered(o)));
-	//}
-	//namespace bm = boost::multiprecision;
-	//// float e = flulp_error<bm::mpfr_float_1000>(std::exp(10.0), bm::exp(bm::mpfr_float_1000(10.0)));
-	//float e = flulp_error<bm::mpfr_float_1000>(1.0f, next_float_up(1.0f));
-	//printf("%f\n", e);
 
-	//namespace bm = boost::multiprecision;
-
-	//int N = 1000;
-	//for (int i = 0; i < N; ++i) {
-	//	float x = glm::mix(0.0f, 2.0f, float(i) / N);
-	//	float e = flulp_error<bm::mpfr_float_1000>(std::log(next_float(x, 1)), bm::log(bm::mpfr_float_1000(x)));
-	//	printf("%.10f,%.10f\n", x, e);
-	//}
-
-	//for (int E = 124; E <= 174; ++E) {
-	//	float x = std::ldexp(1.0f, E - 127 - 23);
-	//	printf("'%.30f\n", x);
-	//}
-
-	float x;
-	memset(&x, 0, sizeof(x));
-	printf("%f\n", x);
 }
